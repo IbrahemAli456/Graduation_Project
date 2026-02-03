@@ -7,6 +7,12 @@ const EXERCISES = [
   { id: "plank", name: "Plank" },
 ]
 
+function formatTime(sec) {
+  const m = String(Math.floor(sec / 60)).padStart(2, "0")
+  const s = String(sec % 60).padStart(2, "0")
+  return `${m}:${s}`
+}
+
 function pickFeedback(exerciseId) {
   const byExercise = {
     squat: [
@@ -36,12 +42,6 @@ function pickFeedback(exerciseId) {
   return list[Math.floor(Math.random() * list.length)]
 }
 
-function formatTime(sec) {
-  const m = String(Math.floor(sec / 60)).padStart(2, "0")
-  const s = String(sec % 60).padStart(2, "0")
-  return `${m}:${s}`
-}
-
 export default function LiveSession() {
   const videoRef = useRef(null)
   const streamRef = useRef(null)
@@ -55,7 +55,7 @@ export default function LiveSession() {
   const [seconds, setSeconds] = useState(0)
   const [status, setStatus] = useState("Ready") // Ready | Good | Warning
 
-  async function startCamera() {
+  async function startSession() {
     setError("")
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -78,22 +78,17 @@ export default function LiveSession() {
     setSeconds(0)
     setFeedback([])
 
-    // Timer
-    timerIntervalRef.current = setInterval(() => {
-      setSeconds((s) => s + 1)
-    }, 1000)
+    timerIntervalRef.current = setInterval(() => setSeconds((s) => s + 1), 1000)
 
-    // Mock real-time feedback
     feedbackIntervalRef.current = setInterval(() => {
       const item = pickFeedback(selectedExercise)
       const ts = new Date().toLocaleTimeString()
-
-      setFeedback((prev) => [{ ts, ...item }, ...prev].slice(0, 8))
+      setFeedback((prev) => [{ ts, ...item }, ...prev].slice(0, 10))
       setStatus(item.level === "warning" ? "Warning" : "Good")
     }, 2000)
   }
 
-  function stopCamera() {
+  function stopSession() {
     if (feedbackIntervalRef.current) {
       clearInterval(feedbackIntervalRef.current)
       feedbackIntervalRef.current = null
@@ -110,110 +105,146 @@ export default function LiveSession() {
     setStatus("Ready")
   }
 
-  function resetSession() {
+  function reset() {
     setFeedback([])
     setSeconds(0)
     setStatus(isRunning ? "Good" : "Ready")
   }
 
   useEffect(() => {
-    return () => stopCamera()
+    return () => stopSession()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const dotClass =
+    status === "Good" ? "dot good" : status === "Warning" ? "dot warn" : "dot ready"
+
   return (
-    <div style={{ display: "grid", gap: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-        <h2 style={{ margin: 0 }}>Live Training Session</h2>
-        <Link to="/plan">← Back to Plan</Link>
+    <div className="grid">
+      {/* Header */}
+      <div className="card">
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div className="h1" style={{ marginBottom: 6 }}>Live Training</div>
+            <div className="muted">Use your camera and get real-time feedback.</div>
+          </div>
+          <Link to="/plan" className="btn">← Back to Plan</Link>
+        </div>
       </div>
 
       {error && (
-        <div style={{ border: "1px solid #f99", padding: 12, borderRadius: 8 }}>
-          <b>Error:</b> {error}
+        <div className="card" style={{ borderColor: "rgba(255,92,122,0.35)" }}>
+          <b style={{ color: "var(--danger)" }}>Error:</b> {error}
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-        <label>
-          Exercise:{" "}
-          <select
-            value={selectedExercise}
-            onChange={(e) => setSelectedExercise(e.target.value)}
-            disabled={isRunning}
-          >
-            {EXERCISES.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.name}
-              </option>
-            ))}
-          </select>
-        </label>
+      {/* Controls */}
+      <div className="card soft">
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+          <div className="row" style={{ alignItems: "center" }}>
+            <label className="label" style={{ minWidth: 220 }}>
+              Exercise
+              <select
+                className="input"
+                value={selectedExercise}
+                onChange={(e) => setSelectedExercise(e.target.value)}
+                disabled={isRunning}
+              >
+                {EXERCISES.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-        <span>
-          Timer: <b>{formatTime(seconds)}</b>
-        </span>
+            <div className="badge">
+              Timer: <b>{formatTime(seconds)}</b>
+            </div>
 
-        <span
-          style={{
-            padding: "4px 10px",
-            borderRadius: 999,
-            border: "1px solid #ddd",
-            fontWeight: 700,
-          }}
-        >
-          Status: {status}
-        </span>
-
-        <button onClick={resetSession} disabled={!isRunning && feedback.length === 0 && seconds === 0}>
-          Reset
-        </button>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
-        <div style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12 }}>
-          <h3 style={{ marginTop: 0 }}>Camera</h3>
-
-          <video
-            ref={videoRef}
-            playsInline
-            muted
-            style={{ width: "100%", borderRadius: 8, background: "#000" }}
-          />
-
-          <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-            {!isRunning ? (
-              <button onClick={startCamera}>Start</button>
-            ) : (
-              <button onClick={stopCamera}>Stop</button>
-            )}
-            <span style={{ opacity: 0.8 }}>{isRunning ? "Running..." : "Not started"}</span>
+            <div className="pill">
+              <span className={dotClass} />
+              Status: {status}
+            </div>
           </div>
 
-          <p style={{ marginTop: 10, opacity: 0.8 }}>
-            (Mock feedback — لاحقًا هيتبدل ب real-time events من الـ AI)
-          </p>
+          <div className="row">
+            {!isRunning ? (
+              <button className="btn primary" onClick={startSession}>
+                Start
+              </button>
+            ) : (
+              <button className="btn" onClick={stopSession}>
+                Stop
+              </button>
+            )}
+            <button className="btn" onClick={reset}>
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Camera + Feedback */}
+      <div className="grid grid-2">
+        <div className="card">
+          <div className="h2">Camera</div>
+
+          <div className="videoWrap" style={{ marginTop: 12 }}>
+            <video ref={videoRef} className="videoEl" playsInline muted />
+            <div className="overlay">
+              <div className="pill">
+                <span className="dot ready" />
+                {EXERCISES.find((x) => x.id === selectedExercise)?.name}
+              </div>
+              <div className="pill">⏱ {formatTime(seconds)}</div>
+            </div>
+          </div>
+
+          <div className="muted" style={{ marginTop: 10 }}>
+            (Mock feedback now — later the AI will stream feedback events.)
+          </div>
         </div>
 
-        <div style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12 }}>
-          <h3 style={{ marginTop: 0 }}>Real-time Feedback</h3>
+        <div className="card">
+          <div className="h2">Real-time Feedback</div>
 
-          {!isRunning ? (
-            <p>Choose exercise then press Start.</p>
-          ) : feedback.length === 0 ? (
-            <p>Waiting for feedback...</p>
-          ) : (
-            <ul style={{ paddingLeft: 18 }}>
-              {feedback.map((f, idx) => (
-                <li key={idx}>
-                  <b>{f.ts}:</b>{" "}
-                  <span style={{ fontWeight: f.level === "warning" ? 700 : 400 }}>
-                    {f.msg}
-                  </span>
-                </li>
-              ))}
-            </ul>
+          {isRunning && feedback.length === 0 && (
+            <div className="muted" style={{ marginTop: 10 }}>
+              Waiting for feedback...
+            </div>
           )}
+
+          {!isRunning && (
+            <div className="muted" style={{ marginTop: 10 }}>
+              Choose exercise then press <b>Start</b>.
+            </div>
+          )}
+
+          <div className="grid" style={{ marginTop: 12 }}>
+            {feedback.map((f, idx) => (
+              <div
+                key={idx}
+                className="card soft"
+                style={{
+                  padding: 12,
+                  borderColor:
+                    f.level === "warning"
+                      ? "rgba(255,204,0,0.25)"
+                      : "rgba(51,209,122,0.25)",
+                }}
+              >
+                <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+                  <div className="badge" style={{ margin: 0 }}>
+                    <span className={f.level === "warning" ? "dot warn" : "dot good"} />
+                    {f.level === "warning" ? "Warning" : "Good"}
+                  </div>
+                  <div className="muted">{f.ts}</div>
+                </div>
+                <div style={{ marginTop: 8, fontWeight: 800 }}>{f.msg}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

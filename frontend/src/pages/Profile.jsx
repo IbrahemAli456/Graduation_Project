@@ -19,31 +19,113 @@ export default function Profile() {
   }
 
   return (
-    <div>
-      <h2>Body Data Input</h2>
+    <div className="grid">
+      {/* Header */}
+      <div className="card">
+        <div className="h1">Your Profile</div>
+        <div className="muted">
+          Enter your body data to generate a personalized workout & nutrition plan.
+        </div>
+      </div>
 
-      <div style={{ display: "grid", gap: 10, maxWidth: 320 }}>
-        <label>
-          Name
-          <input name="name" value={profile.name} onChange={onChange} />
-        </label>
+      {/* Form */}
+      <div className="card">
+        <div className="h2" style={{ marginBottom: 12 }}>
+          Body Data Input
+        </div>
 
-        <label>
-          Age
-          <input name="age" value={profile.age} onChange={onChange} type="number" />
-        </label>
+        <div
+          className="grid"
+          style={{
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            alignItems: "start",
+          }}
+        >
+          <label className="label">
+            Name
+            <input
+              className="input"
+              name="name"
+              value={profile.name}
+              onChange={onChange}
+              placeholder="Your name"
+            />
+          </label>
 
-        <label>
-          Height (cm)
-          <input name="height" value={profile.height} onChange={onChange} type="number" />
-        </label>
+          <label className="label">
+            Age
+            <input
+              className="input"
+              name="age"
+              value={profile.age}
+              onChange={onChange}
+              type="number"
+              placeholder="e.g. 22"
+            />
+          </label>
 
-        <label>
-          Weight (kg)
-          <input name="weight" value={profile.weight} onChange={onChange} type="number" />
-        </label>
+          <label className="label">
+            Height (cm)
+            <input
+              className="input"
+              name="height"
+              value={profile.height}
+              onChange={onChange}
+              type="number"
+              placeholder="e.g. 175"
+            />
+          </label>
 
-        <button onClick={onNext}>Next: Goals</button>
+          <label className="label">
+            Weight (kg)
+            <input
+              className="input"
+              name="weight"
+              value={profile.weight}
+              onChange={onChange}
+              type="number"
+              placeholder="e.g. 75"
+            />
+          </label>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+            marginTop: 14,
+            flexWrap: "wrap",
+          }}
+        >
+          <div className="muted">
+            Tip: You can edit this later anytime.
+          </div>
+
+          <button className="btn primary" onClick={onNext}>
+            Next: Goals →
+          </button>
+        </div>
+      </div>
+
+      {/* Quick Preview */}
+      <div className="card soft">
+        <div className="h2">Preview</div>
+        <div className="muted" style={{ marginTop: 6 }}>
+          <div>
+            <b>Name:</b> {profile.name || "-"}
+          </div>
+          <div>
+            <b>Age:</b> {profile.age || "-"}
+          </div>
+          <div>
+            <b>Height:</b> {profile.height ? `${profile.height} cm` : "-"}
+          </div>
+          <div>
+            <b>Weight:</b> {profile.weight ? `${profile.weight} kg` : "-"}
+          </div>
+        </div>
       </div>
     </div>
   )

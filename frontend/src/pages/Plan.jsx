@@ -5,9 +5,9 @@ function buildPlan(goal) {
   if (goal === "Fat Loss") {
     return {
       workout: [
-        "Day 1: Full Body + HIIT",
-        "Day 2: Lower Body + Core",
-        "Day 3: Upper Body + Cardio",
+        "Full Body + HIIT",
+        "Lower Body + Core",
+        "Upper Body + Cardio",
       ],
       nutrition: [
         "Calories: 1800 - 2000",
@@ -21,9 +21,9 @@ function buildPlan(goal) {
   if (goal === "Muscle Gain") {
     return {
       workout: [
-        "Day 1: Push (Chest/Shoulders/Triceps)",
-        "Day 2: Pull (Back/Biceps)",
-        "Day 3: Legs (Quads/Hamstrings/Glutes)",
+        "Push (Chest/Shoulders/Triceps)",
+        "Pull (Back/Biceps)",
+        "Legs (Quads/Hamstrings/Glutes)",
       ],
       nutrition: [
         "Calories: 2400 - 2800",
@@ -34,12 +34,11 @@ function buildPlan(goal) {
     }
   }
 
-  // Maintain (default)
   return {
     workout: [
-      "Day 1: Upper Body",
-      "Day 2: Lower Body",
-      "Day 3: Cardio + Mobility",
+      "Upper Body",
+      "Lower Body",
+      "Cardio + Mobility",
     ],
     nutrition: [
       "Calories: 2100 - 2300",
@@ -55,31 +54,53 @@ export default function Plan() {
   const plan = buildPlan(goal)
 
   return (
-    <div>
-      <h2>Your Plan</h2>
+    <div className="grid">
+      {/* Header */}
+      <div className="card">
+        <div className="h1">Your Plan</div>
+        <div className="muted">
+          Plan for <b>{profile.name || "User"}</b> — Goal: <b>{goal}</b>
+        </div>
+      </div>
 
-      <p>
-        Plan for: <b>{profile.name || "User"}</b> | Goal:{" "}
-        <b>{goal || "Not selected"}</b>
-      </p>
+      {/* Content */}
+      <div className="grid grid-2">
+        {/* Workout */}
+        <div className="card">
+          <div className="h2">Workout Plan</div>
+          <ul style={{ marginTop: 10 }}>
+            {plan.workout.map((w) => (
+              <li key={w} style={{ marginBottom: 6 }}>{w}</li>
+            ))}
+          </ul>
+        </div>
 
-      <h3>Workout Plan (Mock)</h3>
-      <ul>
-        {plan.workout.map((x) => (
-          <li key={x}>{x}</li>
-        ))}
-      </ul>
+        {/* Nutrition */}
+        <div className="card">
+          <div className="h2">Nutrition Plan</div>
+          <ul style={{ marginTop: 10 }}>
+            {plan.nutrition.map((n) => (
+              <li key={n} style={{ marginBottom: 6 }}>{n}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
 
-      <h3>Nutrition Plan (Mock)</h3>
-      <ul>
-        {plan.nutrition.map((x) => (
-          <li key={x}>{x}</li>
-        ))}
-      </ul>
+      {/* CTA */}
+      <div className="card soft">
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div className="h2" style={{ margin: 0 }}>Ready to train?</div>
+            <div className="muted">
+              Start your live session and get real-time feedback.
+            </div>
+          </div>
 
-      <Link to="/live">Start Live Session</Link>
-
-
+          <Link to="/live" className="btn primary">
+            Start Live Session →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }
