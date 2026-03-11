@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import ThemeToggle from "../components/ThemeToggle"
+import { registerUser } from "../services/auth"
 
 export default function SignUp() {
   const navigate = useNavigate()
@@ -16,29 +17,31 @@ export default function SignUp() {
     setForm((p) => ({ ...p, [name]: value }))
   }
 
-  function onSubmit(e) {
+  async function onSubmit(e) {
     e.preventDefault()
 
-    if (!form.name.trim()) {
-      alert("Please enter your name.")
-      return
-    }
-    if (!form.email.includes("@")) {
-      alert("Please enter a valid email.")
-      return
-    }
-    if (form.password.length < 6) {
-      alert("Password must be at least 6 characters.")
-      return
-    }
-    if (form.password !== form.confirmPassword) {
-      alert("Passwords do not match.")
-      return
-    }
+    if (!form.name.trim()) return alert("Please enter your name.")
+    if (!form.email.includes("@")) return alert("Please enter a valid email.")
+    if (form.password.length < 6) return alert("Password must be at least 6 characters.")
+    if (form.password !== form.confirmPassword) return alert("Passwords do not match.")
 
-    // Mock register (بدون API)
-    localStorage.setItem("isAuth", "true")
-    navigate("/")
+    try {
+      // backend expects: username, email, password
+      const data = await registerUser({
+        username: form.name,
+        email: form.email,
+        password: form.password,
+      })
+
+      // backend returns tokens
+      localStorage.setItem("access_token", data.access_token)
+      localStorage.setItem("refresh_token", data.refresh_token)
+
+      navigate("/")
+    } catch (err) {
+      alert(err?.response?.data?.message || "Register failed")
+      console.log(err)
+    }
   }
 
   return (
