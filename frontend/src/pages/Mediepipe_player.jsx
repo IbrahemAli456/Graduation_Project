@@ -53,6 +53,8 @@ export default function Mediapipe_player() {
   const animFrameRef   = useRef(null)      // rAF handle for skeleton loop
   const sendTimerRef   = useRef(null)      // setInterval for WS sends
   const frameCountRef  = useRef(0)
+  const hasFeedbackRef = useRef(false) // 👈 ADD THIS
+  const isRedRef       = useRef(false) // 👈 ADD THIS
   const hasCriticalRef = useRef(false)
   const latestLandmarksRef = useRef(null)  // latest landmarks from MediaPipe
 
@@ -69,6 +71,9 @@ export default function Mediapipe_player() {
   const isCountingDown = countdown !== null
 
   useEffect(() => { hasCriticalRef.current = hasCritical }, [hasCritical])
+  useEffect(() => { 
+    hasFeedbackRef.current = feedback.length > 0 
+  }, [feedback])
 
   // ── Init MediaPipe Pose (runs in browser via WASM) ─────────
   useEffect(() => {
@@ -109,10 +114,8 @@ export default function Mediapipe_player() {
         visibility: lm.visibility ?? 1.0,
       }))
 
-      // Color based on form quality
-      const color = hasCriticalRef.current ? "#ef4444" : "#22c55e"
-      const fill  = hasCriticalRef.current ? "rgba(239,68,68,0.6)" : "rgba(34,197,94,0.6)"
-
+      const color = isRedRef.current ? "#ef4444" : "#22c55e"
+      const fill  = isRedRef.current ? "rgba(239,68,68,0.6)" : "rgba(34,197,94,0.6)"
       drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, { color, lineWidth: 3 })
       drawLandmarks(ctx, results.poseLandmarks, { color: fill, lineWidth: 1, radius: 4 })
     })
@@ -158,6 +161,10 @@ export default function Mediapipe_player() {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data)
+
+        const hasFeedback = data.feedback?.length > 0
+        isRedRef.current = hasFeedback
+
         frameCountRef.current += 1
         const isWarmup = frameCountRef.current <= WARMUP_FRAMES
 
@@ -355,12 +362,12 @@ export default function Mediapipe_player() {
         {cameraOn && (
           <span style={{
             padding: "6px 14px",
-            background: hasCritical ? "#fef2f2" : "#dcfce7",
+            background: feedback.length > 0 ? "#fef2f2" : "#dcfce7",
             borderRadius: 20, fontSize: 13, fontWeight: 500,
-            color: hasCritical ? "#ef4444" : "#16a34a",
+            color: feedback.length > 0 ? "#ef4444" : "#16a34a",
             transition: "all 0.2s"
           }}>
-            {hasCritical ? "🚨 Bad Form" : poseDetected ? "✅ Good Form" : "👤 No Pose"}
+            {feedback.length > 0 ? "🚨 Bad Form" : poseDetected ? "✅ Good Form" : "👤 No Pose"}
           </span>
         )}
 
@@ -384,7 +391,7 @@ export default function Mediapipe_player() {
         <div style={{
           position: "relative", width: "100%", background: "#000",
           borderRadius: 12, overflow: "hidden",
-          border: hasCritical ? "3px solid #ef4444"
+          border: feedback.length > 0 ? "3px solid #ef4444"
                 : isCountingDown ? "3px solid #facc15"
                 : "3px solid #22c55e",
           transition: "border-color 0.2s",
