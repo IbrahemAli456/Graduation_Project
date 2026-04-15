@@ -44,3 +44,20 @@ export async function press_api(payload) {
   const res = await api.post("/api/Mediapose/press", payload)
   return res.data
 }
+
+
+export async function view_correction(blob, selectedId) {
+  const formData = new FormData();
+  formData.append("frame", blob, "frame.jpg");
+  formData.append("exercise", selectedId);
+
+  try {
+    const res = await api.post("/api/Mediapose/detect-orientation", formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  } catch (error) {
+    const message = error.response?.data?.message || "Orientation check failed";
+    throw new Error(message);
+  }
+}
